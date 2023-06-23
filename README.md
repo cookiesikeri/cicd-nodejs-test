@@ -16,7 +16,8 @@ this is a simple nodejs app  deployted to aws, i will explain the pipeline flow 
 3. when code is pushed to main branch, sonarqube is triggered to scan code for vulnerabilitues, code smell, duplicated codes and outdated packages.
 if the code doesnt meet the standard, then its been sent back as a FAILED push with reason or reasons the code was flagged and tht can be seen in the github actions page.
 5. if code passes all this then build starts immediately.
-6. after a successful build, trivy scanner is triggered to scan the docker image properly for vulnerabilities and breakage that could affect the image in production and also for security checks.
+6. after a successful build, trivy scanner is triggered to scan the docker image properly for vulnerabilities and breakage that could affect the image in production and also for security checks. 
+note: trivy result is also stored in the root of the project .
 7. after the scan by trivy, then image is then pushed to ECR
 8. immediately the image gets to ECR, a scan is also triggered to scan the image by activating auto scan while creating the ECR in the terraform module.
 9. once that is done, the latest image ID is sent to ECS task definition which has the container name already setup in the ECS Task definition.
