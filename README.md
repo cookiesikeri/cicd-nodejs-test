@@ -15,6 +15,9 @@ this is a simple nodejs app  deployted to aws, i will explain the pipeline flow 
 2. added OIDC for token security from aws IAM
 3. when code is pushed to main branch, sonarqube is triggered to scan code for vulnerabilitues, code smell, duplicated codes and outdated packages.
 if the code doesnt meet the standard, then its been sent back as a FAILED push with reason or reasons the code was flagged and tht can be seen in the github actions page.
+
+SUGGESTION:  in a live scenario, i normally add slack pipeline incase there is a failed push so developers can get notified easily using slack notification.
+
 5. if code passes all this then build starts immediately.
 6. after a successful build, trivy scanner is triggered to scan the docker image properly for vulnerabilities and breakage that could affect the image in production and also for security checks. 
 note: trivy result is also stored in the root of the project .
