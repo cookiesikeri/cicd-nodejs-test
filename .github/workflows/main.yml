@@ -29,7 +29,7 @@ jobs:
       with:
         fetch-depth: 0 
 
-    - name: SonarCloud Scan #sonarqube is stup to scan code
+    - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
