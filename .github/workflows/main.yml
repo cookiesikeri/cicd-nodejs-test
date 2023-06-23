@@ -18,7 +18,7 @@ env:
   ECS_CLUSTER: DevCluster 
   ECS_SERVICE: nodebackend  
 
-# jobs:
+jobs:
 
 #   sonarcloud: #sonarqube added to scan code 
 #     name: SonarCloud
