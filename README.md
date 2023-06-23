@@ -30,8 +30,9 @@ b. a task then runs the latest servcice tag.
 
 *Networking*:
 the app can be accessed using a load balancer connected to the EC2 using the target group which has the port of the app.
+but i prefer using api-gateway in some cases for thre app , then use load balancer to route traffic to the api-gateway.
 
-this should run in a live server .
+this should run if all credentials are setup and servies are running on the cloud.
 
 
 
