@@ -18,9 +18,23 @@ env:
   ECS_CLUSTER: DevCluster 
   ECS_SERVICE: nodebackend  
 
-jobs:
+# jobs:
 
-  sonarcloud: #sonarqube added to scan code 
+#   sonarcloud: #sonarqube added to scan code 
+#     name: SonarCloud
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#         with:
+#           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+#       - name: SonarCloud Scan
+#         uses: SonarSource/sonarcloud-github-action@master
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  build:
+
+    sonarcloud: #sonarqube added to scan code 
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
@@ -32,7 +46,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  build:
     name: Build and Pushing the Image
     runs-on: ubuntu-latest
 
