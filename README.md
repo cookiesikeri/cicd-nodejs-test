@@ -14,7 +14,9 @@ this is a simple nodejs app  deployted to aws, i will explain the pipeline flow 
 *pipeline flow*:
 1. push to maain branch to trigger pipeline
 2. added OIDC for token security from aws IAM
-3. when code is pushed to main branch, sonarqube is triggered to scan code for vulnerabilitues, code smell, duplicated codes and outdated packages.
+3. when code is pushed to main branch, codeQL is triggered to scan code for security checks.
+
+4. when codeQL scan is succesful, sonarqube is triggered to scan code for vulnerabilitues, code again for code smell, duplicated codes and outdated packages.
 if the code doesnt meet the standard, then its been sent back as a FAILED push with reason or reasons the code was flagged and tht can be seen in the github actions page.
 
 SUGGESTION:  in a live scenario, i normally add slack pipeline incase there is a failed push so developers can get notified easily using slack notification.
