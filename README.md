@@ -9,6 +9,7 @@ this is a simple nodejs app  deployted to aws, i will explain the pipeline flow 
 4. container runtime: Elastic container service (ECS)
 5. Auto-Testing tools: SonarQube
 6. Image scanner: Trivy scanner.
+7. CodeQL: CodeQL is the code analysis engine developed by GitHub to automate security checks.
 
 *pipeline flow*:
 1. push to maain branch to trigger pipeline
@@ -32,7 +33,7 @@ b. a task then runs the latest servcice tag.
 the app can be accessed using a load balancer connected to the EC2 using the target group which has the port of the app.
 but i prefer using api-gateway in some cases for thre app , then use load balancer to route traffic to the api-gateway.
 
-this should run if all credentials are setup and servies are running on the cloud.
+this config should run fine if all credentials are setup and servies are running on the cloud.
 
 
 
