@@ -27,5 +27,7 @@ b. a task then runs the latest servcice tag.
 *Networking*:
 the app can be accessed using a load balancer connected to the EC2 using the target group which has the port of the app.
 
+this should run in a live server .
+
 
 
