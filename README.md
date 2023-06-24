@@ -32,7 +32,8 @@ a. a new service task is created with the latest task ID.
 b. a task then runs the latest servcice tag.
 
 *Networking*:
-the app is ran by FARGATE, and can be accessed using a load balancer.
+the app is ran by EC2, and can be accessed using a load balancer.
+load balancer can be registered in route53 and using as a domain route.
 
 this config should run fine if all credentials are setup and servies are running on the cloud.
 
