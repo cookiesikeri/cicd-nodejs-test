@@ -1,4 +1,4 @@
-# cicd-nodejs-test by ikeri ebenezer.
+# cicd-nodejs-test by Ikeri Ebenezer.
 
 this is a simple nodejs app  deployted to aws, i will explain the pipeline flow below;
 
