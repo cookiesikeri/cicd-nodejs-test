@@ -1,0 +1,149 @@
+# This is the nodejs pipeline to aws ecr and ecs
+
+name: Deploy to Amazon ECS
+permissions:
+  id-token: write # required to use OIDC authentication
+  contents: write # required
+  actions: read
+  security-events: write
+  statuses: write
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '43 3 * * 5'
+env:
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY_NAME }}
+  ECS_TASK_DEFINITION: task-definition.json 
+  CONTAINER_NAME: nodebackend
+  ECS_CLUSTER: DevCluster 
+  ECS_SERVICE: nodebackend  
+
+jobs:
+
+  build:
+  
+    name: Build and Pushing the Image
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 
+  analyze: #codeQL is triggered to scan pipeline for security checks and leakages.
+    name: Analyze
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
+
+      # - run: |
+      #     echo "Run, Build Application using script"
+      #     ./location_of_script_within_repo/buildscript.sh
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{matrix.language}}"
+
+    - name: SonarCloud Scan #sonarqube is added to scan code properly before build
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ca-central-1
+    - name: Test AWS Creds
+      run: aws sts get-caller-identity
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      
+    
+           
+    - name: Build and tag image 
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: nodebackend
+
+      run: |
+        # Build a docker container and push it to ECR
+        git_hash=$(git rev-parse --short "$GITHUB_SHA")
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${GITHUB_REF##*/}-$git_hash .
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:${GITHUB_REF##*/}-$git_hash"
+        echo "::set-output name=tag::$git_hash"
+
+
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v4.1.1
+      with:
+        images: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+
+    - name: Run Trivy vulnerability scanner to scan image and create GitHub issues
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: '${{ steps.meta.outputs.tags }}-${{ steps.build-image.outputs.tag }}'
+        format: 'table'
+        output: 'trivy-image-results'
+        severity: 'CRITICAL,HIGH'
+
+ 
+    - name: Push image to Amazon ECR
+      id: push-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: nodebackend
+
+      run: |
+        echo "Pushing image to ECR..."
+        git_hash=$(git rev-parse --short "$GITHUB_SHA")
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${GITHUB_REF##*/}-$git_hash
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:${GITHUB_REF##*/}-$git_hash"
+
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ env.ECS_TASK_DEFINITION }}
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
